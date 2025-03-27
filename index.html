@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local Notes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <!-- Updated sidebar toggle styling for mobile -->
+    <style>
+        @media (max-width: 768px) {
+            #sidebar-toggle {
+                display: block !important;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                z-index: 1000;
+                background-color: #1a1a1a;
+                color: white;
+                border: none;
+                border-top-right-radius: 4px;
+                border-bottom-right-radius: 4px;
+                padding: 10px 8px;
+                cursor: pointer;
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+                width: 30px;
+                height: 50px;
+            }
+            
+            #sidebar {
+                position: fixed;
+                left: calc(-1 * var(--sidebar-width));
+                z-index: 100;
+                transition: left 0.3s;
+            }
+            
+            #sidebar.expanded {
+                left: 0;
+            }
+            
+            #sidebar.collapsed {
+                left: calc(-1 * var(--sidebar-width));
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">Local Notes</div>
+        <div class="search-container">
+            <span class="search-icon"><i class="fas fa-search"></i></span>
+            <input type="text" class="search-input" placeholder="Search notes or date:yyyy-mm-dd..." id="search-input">
+        </div>
+        <div class="header-actions">
+            <div id="storage-indicator-header" class="storage-indicator-header" title="Loading storage info...">
+                <span class="storage-percent">--</span>
+            </div>
+            <button onclick="exportBackup()" class="header-btn" title="Export All Notes">
+                <i class="fas fa-upload"></i>
+            </button>
+            <input type="file" id="import-backup" accept=".json" style="display: none;" onchange="importBackup(this.files[0])">
+            <button onclick="document.getElementById('import-backup').click()" class="header-btn" title="Import Notes">
+                <i class="fas fa-download"></i>
+            </button>
+            <button onclick="recalculateTagCounts()" id="repair-tags-btn" class="header-btn" title="Repair Tags">
+                <i class="fas fa-tools"></i>
+            </button>
+            <button id="settings-btn" class="header-btn" title="Settings">
+                <i class="fas fa-cog"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                Tags
+            </div>
+            <div class="view-toggle" id="view-toggle">
+                <button class="active" data-view="active">Notes</button>
+                <button data-view="archived">Archive</button>
+            </div>
+            <div class="tag-filter-container">
+                <input type="text" id="tag-filter" placeholder="Filter tags..." class="tag-filter">
+                <span class="filter-icon"><i class="fas fa-filter"></i></span>
+            </div>
+            <div class="tag-help-text">
+                <small>Hold Ctrl + click to select multiple tags</small>
+            </div>
+            <ul class="tag-list" id="tag-list">
+                <li class="tag-item active" data-tag="all">
+                    <span>All Notes</span>
+                    <span class="tag-count" id="all-notes-count">0</span>
+                </li>
+                <!-- Tags will be added here -->
+            </ul>
+            <div class="sidebar-footer">
+                <div class="footer-buttons">
+                    <!-- Export/Import/Repair buttons moved to header -->
+                </div>
+                <!-- Version display will be inserted here by JS -->
+                <div id="version-display" class="version-display" title="Local Notes version"></div>
+            </div>
+        </aside>
+        
+        <!-- Add sidebar toggle button with data attribute to prevent event conflicts -->
+        <button id="sidebar-toggle" class="sidebar-toggle" title="Toggle Sidebar" data-no-duplicate-events="true">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+
+        <main class="main-content">
+            <!-- Google Keep style compact note creation -->
+            <div class="create-note-compact" id="create-note-compact">
+                <div class="create-note-prompt">Take a note...</div>
+                <div class="create-note-actions-compact">
+                    <button title="Bullet list">
+                        <span class="icon"><i class="fas fa-list-ul"></i></span>
+                    </button>
+                    <button title="Numbered list">
+                        <span class="icon"><i class="fas fa-list-ol"></i></span>
+                    </button>
+                    <button title="Upload image">
+                        <span class="icon"><i class="fas fa-image"></i></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expanded note creation (appears when clicking the compact version) -->
+            <div class="create-note" id="create-note">
+                <div class="create-note-close" id="create-note-close">
+                    <i class="fas fa-times"></i>
+                </div>
+                <div class="create-note-title" id="create-note-title" contenteditable="true" data-placeholder="Title"></div>
+                <div class="create-note-content editable" id="create-note-content" contenteditable="true" data-placeholder="Take a note..."></div>
+                
+                <!-- Improved rich text toolbar with additional formatting options -->
+                <div class="toolbar" id="create-toolbar">
+                    <!-- Text styling -->
+                    <div class="toolbar-group">
+                        <button onclick="formatText('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button onclick="formatText('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button onclick="formatText('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                        <button onclick="formatText('strikethrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                    
+                    <!-- Lists -->
+                    <div class="toolbar-group">
+                        <button onclick="formatText('bulletList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                        <button onclick="formatText('numberedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    </div>
+                    
+                    <!-- Headings dropdown -->
+                    <div class="toolbar-group">
+                        <div class="heading-dropdown">
+                            <button title="Headings"><i class="fas fa-heading"></i></button>
+                            <div class="heading-dropdown-content">
+                                <button onclick="formatText('h1')">Heading 1</button>
+                                <button onclick="formatText('h2')">Heading 2</button>
+                                <button onclick="formatText('h3')">Heading 3</button>
+                                <button onclick="formatText('p')">Normal Text</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Text alignment -->
+                    <div class="toolbar-group align-buttons">
+                        <button onclick="formatText('alignLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                        <button onclick="formatText('alignCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                        <button onclick="formatText('alignRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    
+                    <!-- Blockquote -->
+                    <div class="toolbar-group">
+                        <button onclick="formatText('blockquote')" title="Quote"><i class="fas fa-quote-right"></i></button>
+                    </div>
+                    
+                    <!-- Media/links -->
+                    <div class="toolbar-group">
+                        <button onclick="createLink()" title="Insert Link"><i class="fas fa-link"></i></button>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div class="toolbar-actions">
+                        <button id="close-create-note-btn">Close</button>
+                        <button id="create-note-btn" class="primary">Create Note</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notes-container" id="notes-container">
+                <!-- Notes will be added here -->
+                <div class="empty-state" id="empty-state">
+                    <!-- Empty state content removed -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="note-modal">
+        <div class="note-modal">
+            <div class="note-modal-header">
+                <div class="note-modal-title">Edit Note <span id="unsaved-indicator" class="unsaved-indicator" style="display: none;"></span></div>
+                <button onclick="closeNoteModal()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="note-modal-content">
+                <div class="edit-note-title" id="edit-note-title" contenteditable="true" data-placeholder="Title"></div>
+                <div class="editable" id="edit-note-content" contenteditable="true" data-placeholder="Take a note..."></div>
+                
+                <!-- Added matching toolbar for edit mode -->
+                <div class="toolbar" id="edit-toolbar">
+                    <!-- Text styling -->
+                    <div class="toolbar-group">
+                        <button onclick="formatTextEdit('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                        <button onclick="formatTextEdit('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                        <button onclick="formatTextEdit('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                        <button onclick="formatTextEdit('strikethrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                    </div>
+                    
+                    <!-- Lists -->
+                    <div class="toolbar-group">
+                        <button onclick="formatTextEdit('bulletList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                        <button onclick="formatTextEdit('numberedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                    </div>
+                    
+                    <!-- Headings dropdown -->
+                    <div class="toolbar-group">
+                        <div class="heading-dropdown">
+                            <button title="Headings"><i class="fas fa-heading"></i></button>
+                            <div class="heading-dropdown-content">
+                                <button onclick="formatTextEdit('h1')">Heading 1</button>
+                                <button onclick="formatTextEdit('h2')">Heading 2</button>
+                                <button onclick="formatTextEdit('h3')">Heading 3</button>
+                                <button onclick="formatTextEdit('p')">Normal Text</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Text alignment -->
+                    <div class="toolbar-group align-buttons">
+                        <button onclick="formatTextEdit('alignLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                        <button onclick="formatTextEdit('alignCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                        <button onclick="formatTextEdit('alignRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                    </div>
+                    
+                    <!-- Blockquote -->
+                    <div class="toolbar-group">
+                        <button onclick="formatTextEdit('blockquote')" title="Quote"><i class="fas fa-quote-right"></i></button>
+                    </div>
+                    
+                    <!-- Media/links -->
+                    <div class="toolbar-group">
+                        <button onclick="createLinkEdit()" title="Insert Link"><i class="fas fa-link"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="note-modal-footer">
+                <div class="note-created-date" id="note-created-date"></div>
+            </div>
+            <div class="note-modal-actions">
+                <div class="note-modal-actions-left">
+                    <button class="danger" id="delete-note-btn"><i class="fas fa-trash-alt"></i> Delete</button>
+                    <button id="archive-note-btn"><i class="fas fa-archive"></i> Archive</button>
+                    <button id="print-pdf-btn"><i class="fas fa-file-pdf"></i> Print to PDF</button>
+                </div>
+                <div class="note-modal-actions-right">
+                    <button id="save-note-btn" class="primary"><i class="fas fa-save"></i> Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="settings-modal">
+            <div class="modal-header">
+                <div class="modal-title">Settings</div>
+                <button onclick="closeSettingsModal()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-content">
+                <div class="settings-section">
+                    <h3>Appearance</h3>
+                    <div class="setting-item">
+                        <label for="accent-color">Accent Color</label>
+                        <input type="color" id="accent-color" value="#bb86fc">
+                        <button id="reset-accent-color" class="small-btn" title="Reset to default"><i class="fas fa-undo"></i></button>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Sidebar</h3>
+                    <div class="setting-item">
+                        <label for="sidebar-width">Sidebar Width</label>
+                        <input type="range" id="sidebar-width" min="180" max="350" value="250">
+                        <span class="setting-value" id="sidebar-width-value">250px</span>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h3>Notes</h3>
+                    <div class="setting-item">
+                        <label for="note-width">Default Note Width</label>
+                        <input type="range" id="note-width" min="200" max="400" value="280">
+                        <span class="setting-value" id="note-width-value">280px</span>
+                    </div>
+                </div>
+                
+                <!-- Version Information section -->
+                <div class="settings-section">
+                    <h3>Version Information</h3>
+                    <div class="setting-item version-info">
+                        <div class="version-info-content">
+                            <table class="version-table">
+                                <tr>
+                                    <td class="version-label">App Version:</td>
+                                    <td class="version-value" id="app-version-display">--</td>
+                                </tr>
+                                <tr>
+                                    <td class="version-label">Database Version:</td>
+                                    <td class="version-value" id="db-version-display">--</td>
+                                </tr>
+                                <tr>
+                                    <td class="version-label">Last Updated:</td>
+                                    <td class="version-value" id="last-updated-display">--</td>
+                                </tr>
+                            </table>
+                            
+                            <!-- GitHub Update Information -->
+                            <div id="github-update-container" class="github-update-container">
+                                <h4>Update Information</h4>
+                                <p id="update-status">Checking for updates...</p>
+                                <p id="last-checked" class="last-checked">Last checked: --</p>
+                                <button id="check-updates-btn" class="check-updates-btn">
+                                    <i class="fas fa-sync"></i> Check for Updates
+                                </button>
+                            </div>
+                            
+                            <div class="version-info-description">
+                                <p>When the app is updated, both versions are tracked:</p>
+                                <ul>
+                                    <li><strong>App version</strong> changes reflect new features and improvements</li>
+                                    <li><strong>Database version</strong> changes reflect structural changes to how data is stored</li>
+                                </ul>
+                                <p>Backups include version information to ensure compatibility when importing across different versions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- New data management section with Reset Database functionality -->
+                <div class="settings-section">
+                    <h3>Data Management</h3>
+                    <div class="setting-item danger-zone">
+                        <div class="danger-zone-header">Danger Zone</div>
+                        <div class="danger-zone-description">
+                            <p>Resetting the database will permanently delete all notes and tags. This action cannot be undone.</p>
+                            <p>Make sure to export a backup before proceeding.</p>
+                        </div>
+                        <button id="reset-database-btn" class="danger">Reset Database</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeSettingsModal()" class="secondary-btn">Cancel</button>
+                <button onclick="saveSettings()" class="primary">Save Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tag Manager Modal -->
+    <div class="modal-overlay" id="tag-manager-modal">
+        <div class="tag-manager-modal">
+            <div class="modal-header">
+                <div class="modal-title">Tag Manager</div>
+                <button onclick="closeTagManagerModal()" title="Close"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-content">
+                <div class="tag-manager-search">
+                    <input type="text" id="tag-manager-search-input" placeholder="Search tags...">
+                </div>
+                <div class="tag-manager-list" id="tag-manager-list">
+                    <!-- Tags will be listed here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeTagManagerModal()" class="secondary-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for image uploads -->
+    <input type="file" id="image-upload" accept="image/*" style="display: none;">    
+
+    <script src="script.js"></script>
+    </body>
+</html>

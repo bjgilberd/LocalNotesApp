@@ -1,0 +1,2504 @@
+:root {
+    --bg-main: #121212;
+    --bg-note: #1e1e1e;
+    --bg-note-hover: #2a2a2a;
+    --bg-sidebar: #1a1a1a;
+    --text-primary: #e0e0e0;
+    --text-secondary: #aaaaaa;
+    --accent: #bb86fc;
+    --accent-light: rgba(187, 134, 252, 0.2);
+    --error: #cf6679;
+    --header-height: 60px;
+    --sidebar-width: 250px;
+    --surface-color: #292929;
+    --border-color: rgba(255, 255, 255, 0.1);
+    --input-bg-color: rgba(0, 0, 0, 0.2);
+    --text-color: var(--text-primary);
+    --hover-color: rgba(187, 134, 252, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    padding: 0 20px;
+    height: var(--header-height);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.logo {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-right: auto;
+}
+
+.search-container {
+    position: relative;
+    width: 50%;
+    max-width: 600px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: none;
+    background-color: var(--bg-note);
+    color: var(--text-primary);
+    padding-left: 40px;
+    padding-right: 35px; /* Add right padding for the help button */
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+}
+
+.app-container {
+    display: flex;
+    height: calc(100vh - var(--header-height));
+    margin-top: 0; /* Remove this margin that was causing the space */
+}
+
+.sidebar {
+    width: var(--sidebar-width);
+    background-color: var(--bg-sidebar);
+    padding: 0; /* Remove top padding */
+    overflow-y: auto;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    height: 100%; /* Ensure it fills the height */
+    max-height: calc(100vh - var(--header-height));
+}
+
+.sidebar-header {
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    margin-top: 0; /* Ensure no top margin */
+}
+
+.tag-list {
+    overflow-y: auto;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
+    padding: 0 5px 10px 5px; /* Add some horizontal padding */
+    flex: 1;
+    max-height: calc(100vh - 300px); /* Limit max height to prevent sidebar overflow */
+}
+
+.tag-item {
+    display: flex;
+    align-items: center; /* Changed back to center from flex-start */
+    padding: 4px 8px; /* Reduced padding */
+    border-radius: 4px;
+    margin: 0; /* Remove margin completely */
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    color: var(--text-secondary);
+    position: relative;
+    line-height: 1.2; /* Tighter line height */
+}
+
+.tag-item span:first-child {
+    flex: 1;
+    word-break: break-word; /* Allow long words to break */
+    overflow-wrap: break-word;
+    font-size: 0.95em; /* Slightly smaller font size */
+    max-width: calc(100% - 35px); /* Leave space for count */
+}
+
+.tag-item .tag-count {
+    font-size: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 1px 6px;
+    margin-left: 5px; /* Reduced margin */
+    color: var(--text-secondary);
+    display: inline-block;
+}
+
+/* Update long tag styling */
+.long-tag {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 150px; /* Increased a bit since we have more space */
+}
+
+.tag-item:hover {
+    background-color: var(--bg-note-hover);
+}
+
+.tag-item.active {
+    background-color: var(--accent-light);
+    color: var(--accent);
+}
+
+/* Special styling for the All Notes item */
+.tag-item[data-tag="all"] {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 5px;
+    padding-bottom: 8px;
+    font-weight: 500;
+}
+
+.tag-item[data-tag="all"] span:first-child {
+    font-size: 1.05em;
+}
+
+.tag-item[data-tag="all"] .tag-count {
+    background-color: var(--accent);
+    color: var(--bg-main);
+}
+
+.tag-item[data-tag="all"].active {
+    background-color: var(--accent);
+    color: var(--bg-main);
+}
+
+.tag-item[data-tag="all"].active .tag-count {
+    background-color: rgba(255, 255, 255, 0.3);
+    color: var(--bg-main);
+}
+
+/* Style for the tag help message */
+.tag-help {
+    padding: 5px 20px;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 5px;
+    font-style: italic;
+}
+
+/* Visual indication when multiple tags are selected */
+.tag-item.active.multi-selected {
+    border-left: 3px solid var(--accent);
+}
+
+/* Visual indication when Ctrl key is pressed for multi-select mode */
+.multi-select-mode .tag-item:not(.active):hover {
+    background-color: rgba(187, 134, 252, 0.1);
+    border-left: 3px solid rgba(187, 134, 252, 0.3);
+}
+
+.tag-icon {
+    margin-right: 10px;
+    width: 20px;
+    display: inline-block;
+}
+
+.tag-count {
+    margin-left: auto;
+    background-color: var(--accent-light);
+    color: var(--accent);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+}
+
+.main-content {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Update the CSS to hide resize handles in normal view */
+.note .resize-handle {
+    display: none; /* Hide resize handles in normal note view */
+}
+
+/* Only show resize handles in edit mode */
+.editable .resizable-image-container .resize-handle {
+    display: block; /* Show resize handles only in edit mode */
+}
+
+/* Additional style refinements */
+.resizable-image-container {
+    position: relative;
+    display: inline-block;
+    max-width: 100%;
+    margin: 8px 0;
+}
+
+.resize-handle {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background-color: var(--accent);
+    z-index: 10;
+    border-radius: 2px; /* Add rounded corners to the handles */
+}
+
+/* Google Keep style compact note creation */
+.create-note-compact {
+    background-color: var(--bg-note);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: box-shadow 0.2s, background-color 0.2s;
+    position: relative;
+    z-index: 1;
+	margin-top: 10px; /* Reset existing margin */
+    margin-bottom: 20px; /* Keep bottom margin */
+}
+
+.create-note-compact:hover {
+    background-color: var(--bg-note-hover);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.create-note-prompt {
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.create-note-actions-compact {
+    display: flex;
+    gap: 8px;
+}
+
+.create-note-actions-compact button {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.create-note-actions-compact button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Google Keep style expanded note creation */
+.create-note {
+    background-color: var(--bg-note);
+    border-radius: 8px;
+    margin: 20px auto;
+    max-width: 600px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), 0 8px 12px rgba(0, 0, 0, 0.1);
+    display: none; /* Initially hidden */
+    flex-direction: column;
+    transition: box-shadow 0.3s;
+    overflow: hidden;
+    position: relative;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+	margin-top: 40px; /* Reset existing margin */
+    margin-bottom: 20px; /* Keep bottom margin */
+}
+
+.create-note.active {
+    display: flex;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.create-note-title {
+    width: 100%;
+    padding: 16px 16px 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.create-note-title:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-secondary);
+}
+
+.create-note-content {
+    width: 100%;
+    min-height: 100px;
+    padding: 8px 16px 16px;
+    font-size: 1rem;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    outline: none;
+    resize: none;
+}
+
+.create-note-content:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-secondary);
+}
+
+/* Masonry layout for notes - prepared for JS positioning */
+.notes-container {
+    position: relative; /* Required for absolute positioning of notes */
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 0 16px;
+    margin: 0 auto;
+    min-height: 500px; /* Ensure container has height even when empty */
+}
+
+/* Style for notes in the masonry layout */
+.note {
+    position: absolute; /* Will be positioned by JS */
+    background-color: var(--bg-note);
+    border-radius: 8px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    width: 280px; /* Default width - will be set by JS */
+    box-sizing: border-box;
+    overflow: hidden;
+    opacity: 0; /* Start invisible */
+    transition: opacity 0.3s, transform 0.2s, box-shadow 0.2s;
+}
+
+.note.visible {
+    opacity: 1; /* Made visible by JS after positioning */
+}
+
+.note:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    background-color: var(--bg-note-hover);
+}
+
+/* Note content styling */
+.note-content {
+    flex: 1;
+    overflow: hidden;
+    margin-bottom: 10px;
+    word-wrap: break-word;
+    min-height: 20px; /* Ensure minimum height for very short content */
+}
+
+/* Improved image resize with visible handles */
+.note-content img, .editable img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+    margin: 8px 0;
+    position: relative;
+    border: 1px solid var(--accent-light);
+}
+
+.resize-handle.top-left {
+    top: 0;
+    left: 0;
+    cursor: nw-resize;
+}
+
+.resize-handle.top-right {
+    top: 0;
+    right: 0;
+    cursor: ne-resize;
+}
+
+.resize-handle.bottom-left {
+    bottom: 0;
+    left: 0;
+    cursor: sw-resize;
+}
+
+.resize-handle.bottom-right {
+    bottom: 0;
+    right: 0;
+    cursor: se-resize;
+}
+
+.note-content a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.note-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: auto;
+}
+
+.tag {
+    display: inline-block;
+    padding: 2px 6px;
+    margin: 2px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    background-color: var(--accent-light);
+    color: var(--accent);
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.tag:hover {
+    background-color: var(--accent);
+    color: black;
+}
+
+/* Improved toolbar styling */
+.toolbar {
+    display: flex;
+    padding: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: var(--bg-note);
+    flex-wrap: nowrap !important;
+    gap: 2px;
+    overflow-x: auto;
+    overflow-y: hidden; /* Prevent vertical scrollbar */
+    white-space: nowrap;
+    scrollbar-width: thin;
+    -ms-overflow-style: none;
+    min-width: 0;
+    width: 100%;
+    height: auto; /* Let height adjust naturally */
+    box-sizing: border-box; /* Include padding in height calculation */
+}
+
+/* Specifically target the edit modal toolbar */
+.note-modal .toolbar {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.toolbar::-webkit-scrollbar {
+    height: 4px;
+}
+
+.toolbar::-webkit-scrollbar-thumb {
+    background: var(--accent-light);
+    border-radius: 4px;
+}
+
+/* Create a nicer separation between toolbar groups */
+.toolbar-group {
+    display: flex;
+    gap: 2px;
+    margin-right: 5px;
+    border-radius: 3px;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 2px;
+    flex-shrink: 0;
+}
+
+/* Styling for Material Icons in toolbar */
+.toolbar button .material-icons {
+    font-size: 18px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    font-weight: normal;
+}
+
+/* Specific icon size adjustments */
+.toolbar button .material-icons[title="Heading 1"] {
+    font-size: 20px;
+}
+
+.toolbar button .material-icons[title="Heading 2"] {
+    font-size: 19px;
+}
+
+.toolbar button .material-icons[title="Heading 3"] {
+    font-size: 18px;
+}
+
+/* Refined toolbar button styling */
+.toolbar button {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    min-width: 30px;
+    min-height: 30px;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.toolbar button:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.toolbar button.active {
+    background-color: rgba(187, 134, 252, 0.2);
+    color: var(--accent);
+}
+
+.toolbar-separator {
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+/* Toolbar tooltip (for button titles) */
+.toolbar button:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+}
+
+/* Screen reader only text (for accessibility) */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.toolbar-actions {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+}
+
+/* Dropdown styling for headings */
+.heading-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.heading-dropdown-content {
+    display: none;
+    position: absolute;
+    top: auto; /* Remove top positioning */
+    bottom: 100%; /* Position above the button */
+    left: 0;
+    background-color: var(--bg-sidebar);
+    min-width: 160px;
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+    z-index: 150;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+
+.heading-dropdown-content button {
+    color: var(--text-secondary);
+    padding: 10px 16px;
+    text-decoration: none;
+    display: block;
+    text-align: left;
+    width: 100%;
+    border-radius: 0;
+    transition: background-color 0.2s;
+}
+
+.heading-dropdown-content button:hover {
+    background-color: var(--bg-note-hover);
+}
+
+.heading-dropdown-content.show {
+    display: block;
+}
+
+button {
+    background-color: var(--bg-note-hover);
+    color: var(--text-primary);
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: var(--accent-light);
+    color: var(--accent);
+}
+
+button.primary {
+    background-color: var(--accent);
+    color: black;
+}
+
+button.primary:hover {
+    background-color: #aa75e6;
+    color: black;
+}
+
+button.danger {
+    background-color: var(--error);
+    color: black;
+}
+
+button.danger:hover {
+    background-color: #bb5968;
+    color: black;
+}
+
+/* Modal styling for Google Keep look */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.note-modal {
+    background-color: var(--bg-note);
+    width: 600px;
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    overflow: hidden;
+}
+
+.modal-overlay.active .note-modal {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+.note-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+}
+
+.note-modal-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.note-modal-content {
+    padding: 0 16px 16px;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 200px;
+}
+
+.edit-note-title {
+    width: 100%;
+    padding: 0 0 8px 0;
+    font-size: 1.1rem;
+    font-weight: 500;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.edit-note-title:empty:before {
+    content: attr(data-placeholder);
+    color: var(--text-secondary);
+}
+
+.editable {
+    outline: none;
+    width: 100%;
+    min-height: 200px;
+}
+
+/* Improved styling for lists */
+.editable ul, .editable ol {
+    padding-left: 30px;
+    margin: 10px 0;
+}
+
+/* Better link styling in editor */
+.editable a {
+    color: var(--accent);
+    text-decoration: underline;
+}
+
+.note-modal-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.note-modal-actions-left,
+.note-modal-actions-right {
+    display: flex;
+    gap: 8px;
+}
+
+/* "Unsaved changes" indicator */
+.unsaved-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    margin-left: 8px;
+}
+
+.view-toggle {
+    display: flex;
+    margin: 10px 20px;
+    background-color: var(--bg-note);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.view-toggle button {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.view-toggle button.active {
+    background-color: var(--accent-light);
+    color: var(--accent);
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    color: var(--text-secondary);
+    text-align: center;
+    width: 100%;
+    min-height: 200px;
+    position: relative;
+    margin: 0 auto;
+    max-width: 800px; /* Limit width on very wide screens */
+}
+
+.empty-state-text {
+    font-size: 1.3rem;
+    max-width: none;
+    line-height: 1.5;
+    margin: 0 auto;
+    white-space: nowrap; /* Prevent text from wrapping */
+    display: inline-block; /* Helps with centering */
+    position: relative; /* For absolute positioning of any future child elements */
+}
+
+.icon {
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Checklist styling */
+ul.checklist {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+ul.checklist li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+ul.checklist li input[type="checkbox"] {
+    margin-right: 8px;
+    margin-top: 4px;
+}
+
+/* Formatting styles for rich text */
+.editable h1 {
+    font-size: 1.8rem;
+    margin: 10px 0;
+    color: var(--text-primary);
+}
+
+.editable h2 {
+    font-size: 1.5rem;
+    margin: 8px 0;
+    color: var(--text-primary);
+}
+
+.editable h3 {
+    font-size: 1.3rem;
+    margin: 6px 0;
+    color: var(--text-primary);
+}
+
+.editable h4 {
+    font-size: 1.1rem;
+    margin: 6px 0;
+    color: var(--text-primary);
+}
+
+.editable h5 {
+    font-size: 1rem;
+    margin: 4px 0;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.editable h6 {
+    font-size: 0.9rem;
+    margin: 4px 0;
+    color: var(--text-primary);
+    font-weight: bold;
+}
+
+.editable blockquote {
+    border-left: 3px solid var(--accent);
+    margin: 10px 0;
+    padding: 10px 20px;
+    background-color: rgba(187, 134, 252, 0.05);
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.align-left {
+    text-align: left;
+}
+
+.align-center {
+    text-align: center;
+}
+
+.align-right {
+    text-align: right;
+}
+
+.align-justify {
+    text-align: justify;
+}
+
+/* Text alignment buttons */
+.align-buttons {
+    display: flex;
+}
+
+/* Improved styling for images in notes */
+.note-image {
+    max-width: 80%;
+    height: auto;
+    display: block;
+    margin: 10px 0;
+    border-radius: 4px;
+}
+
+/* Refined paragraph spacing in editable content */
+.editable p {
+    margin: 4px 0;
+    min-height: 1.2em;
+}
+
+/* Adjust line height for better spacing */
+.editable {
+    line-height: 1.3;
+}
+
+/* Make sure text after images has proper spacing */
+.editable img + p {
+    margin-top: 2px;
+}
+
+/* Styling for the note creation date display */
+.note-modal-footer {
+    padding: 8px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-align: right;
+}
+
+.note-created-date {
+    display: inline-block;
+    opacity: 0.8;
+}
+
+/* Styles for search help tooltip */
+.search-help-button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--bg-note);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.search-help-button:hover {
+    background-color: var(--bg-note-hover);
+    color: var(--text-primary);
+}
+
+.search-help-tooltip {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 240px;
+    background-color: var(--bg-sidebar);
+    border-radius: 4px;
+    padding: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    display: none;
+    color: var(--text-primary);
+}
+
+.search-help-tooltip.active {
+    display: block;
+}
+
+.search-help-tooltip h4 {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    color: var(--accent);
+}
+
+.search-help-tooltip p {
+    margin: 4px 0;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+/* Add an arrow to the tooltip */
+.search-help-tooltip:before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 105px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--bg-sidebar);
+    transform: rotate(45deg);
+}
+
+/* Placeholder style for search input */
+.search-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* Responsive adjustments for grid layout */
+@media (min-width: 3200px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+}
+
+@media (min-width: 2600px) and (max-width: 3199px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    }
+}
+
+@media (min-width: 2000px) and (max-width: 2599px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+}
+
+@media (min-width: 1601px) and (max-width: 1999px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (min-width: 1201px) and (max-width: 1600px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    }
+}
+
+@media (min-width: 769px) and (max-width: 900px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .notes-container {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: calc(-1 * var(--sidebar-width)); /* Use variable instead of hardcoded value */
+        transition: left 0.3s;
+        z-index: 20;
+        height: calc(100vh - var(--header-height));
+        top: var(--header-height);
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.2);
+        padding: 0 0 0 0; /* Remove all padding */
+        display: flex;
+        flex-direction: column;
+        overflow: hidden; /* Hide overflow initially */
+    }
+    
+    .sidebar.expanded {
+        overflow-y: auto; /* Allow scrolling when expanded */
+    }
+
+    .sidebar-header {
+        padding: 15px 20px;
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--accent);
+        background-color: var(--bg-sidebar);
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        margin: 0;
+    }
+    
+    .view-toggle {
+        position: sticky;
+        top: 45px; /* Below the Tags header */
+        z-index: 4;
+        margin: 0 10px 10px;
+        background-color: var(--bg-note);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+    
+    .tag-list {
+        overflow-y: auto;
+        padding: 0 0 10px 0;
+        flex: 1;
+    }
+    
+    .sidebar-toggle {
+        display: block;
+    }
+
+    .sidebar.collapsed {
+        left: calc(-1 * var(--sidebar-width)); /* Use variable instead of hardcoded value */
+    }
+
+    .sidebar.expanded {
+        left: 0;
+    }
+
+    .menu-toggle {
+        display: block;
+    }
+    
+    .create-note-compact {
+        margin-top: 0; /* Reset existing margin */
+        margin-bottom: 20px; /* Keep bottom margin */
+    }
+    
+    .toolbar {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .sidebar-footer {
+        position: relative; /* Ensure relative positioning on mobile too */
+        margin-top: auto;
+        left: auto; /* Remove left positioning */
+        transition: none; /* Remove transition since it moves with the sidebar */
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 0; /* Less padding on mobile */
+        margin-bottom: 0;
+    }
+    
+    .sidebar.expanded .sidebar-footer {
+        left: auto; /* Remove left positioning */
+    }
+    
+    .main-content {
+        transition: margin-left 0.3s;
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .view-toggle button {
+        padding: 10px;
+        font-weight: 600;
+    }
+
+    .storage-indicator {
+        margin: 10px;
+        width: calc(100% - 20px); /* Account for margin */
+    }
+    
+    .backup-btn {
+        margin: 5px 10px;
+        width: calc(100% - 20px); /* Account for margin */
+    }
+}
+
+@media (max-width: 480px) {
+    .notes-container {
+        grid-template-columns: 1fr; /* Single column for mobile */
+    }
+}
+
+.main-content {
+    padding-top: 40px; /* Increase this value to add more space */
+}
+
+/* Add to your existing CSS */
+.sidebar-footer {
+    position: relative; /* Change from fixed to relative */
+    margin-top: auto; /* Push to bottom of flex container */
+    width: 100%; /* Full width of sidebar */
+    padding: 16px;
+    background-color: var(--bg-sidebar);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0; /* Prevent shrinking */
+}
+
+/* Ensure consistent spacing for all direct children in sidebar-footer */
+.sidebar-footer > * {
+    margin-bottom: 8px;
+}
+
+.sidebar-footer > *:last-child {
+    margin-bottom: 0;
+}
+
+.backup-btn {
+    width: 100%;
+    text-align: left;
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: var(--bg-note);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+.backup-btn:hover {
+    background-color: var(--bg-note-hover);
+}
+
+.backup-btn i {
+    margin-right: 5px;
+    width: 16px; /* Ensure all icons have the same width */
+    text-align: center; /* Center icons in their space */
+}
+
+/* Storage Indicator Styles */
+.storage-indicator {
+    background-color: var(--bg-note);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    width: 100%;
+}
+
+.storage-info-header {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.storage-bar {
+    height: 6px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    margin: 5px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.storage-used {
+    height: 100%;
+    background-color: var(--accent);
+    border-radius: 3px;
+}
+
+.storage-text {
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+/* Status notification for persistence confirmation */
+.status-notification.success {
+    background-color: rgba(76, 175, 80, 0.2);
+    border-left: 3px solid #4CAF50;
+    color: #4CAF50;
+}
+
+/* Highlight effect for saved notes */
+@keyframes highlightSaved {
+    0% { background-color: rgba(187, 134, 252, 0.1); }
+    50% { background-color: rgba(187, 134, 252, 0.3); }
+    100% { background-color: rgba(187, 134, 252, 0.1); }
+}
+
+.highlight-saved {
+    animation: highlightSaved 2s ease;
+    border-left: 3px solid var(--accent);
+    box-shadow: 0 0 15px rgba(187, 134, 252, 0.3);
+}
+
+/* Responsive adjustments for the empty state */
+@media (min-width: 1600px) {
+    .empty-state {
+        padding-top: 60px;
+    }
+}
+
+@media (max-width: 600px) {
+    .empty-state-text {
+        font-size: 1.1rem;
+        white-space: normal; /* Allow wrapping on very small screens */
+        padding: 0 15px;
+    }
+}
+
+/* Sidebar toggle button styles */
+.sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: calc(var(--header-height) + 10px);
+    left: 0;
+    z-index: 100;
+    background-color: var(--bg-sidebar);
+    color: white;
+    border: none;
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    padding: 10px 8px;
+    cursor: pointer;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+    transition: left 0.3s;
+    width: 30px;
+    height: 50px;
+}
+
+.sidebar-toggle:hover {
+    background-color: #333;
+}
+
+.sidebar-toggle i {
+    transition: transform 0.3s;
+    font-size: 16px;
+}
+
+.sidebar.collapsed + .sidebar-toggle {
+    left: 0;
+}
+
+.sidebar.expanded + .sidebar-toggle {
+    left: var(--sidebar-width); /* Use variable instead of hardcoded position */
+}
+
+.sidebar.collapsed + .sidebar-toggle i {
+    transform: rotate(0deg);
+}
+
+.sidebar.expanded + .sidebar-toggle i {
+    transform: rotate(180deg);
+}
+
+/* Tag filter container and input */
+.tag-filter-container {
+    position: relative;
+    padding: 5px 10px;
+    margin-bottom: 5px;
+}
+
+.tag-filter {
+    width: 100%;
+    padding: 6px 10px 6px 28px;
+    background-color: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 0.85rem; /* Smaller font size */
+}
+
+.tag-filter:focus {
+    outline: none;
+    border-color: var(--accent);
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.filter-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    pointer-events: none;
+}
+
+.tag-help-text {
+    padding: 0 10px 5px;
+    color: var(--text-secondary);
+    font-size: 0.75rem; /* Smaller font size */
+    text-align: center;
+    margin-bottom: 2px;
+}
+
+/* Add scrollbar styling for the sidebar and main content */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-light);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
+}
+
+/* Firefox scrollbar styling */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-light) var(--bg-main);
+}
+
+/* Settings button in header */
+.header-btn {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin-left: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.header-btn i {
+    font-size: 1.2rem;
+}
+
+.header-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--accent);
+    transform: rotate(15deg);
+}
+
+/* Settings Modal */
+.settings-modal {
+    background-color: var(--bg-note);
+    border-radius: 8px;
+    width: 500px;
+    max-width: 90vw;
+    max-height: 90vh;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.3s, transform 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+.modal-overlay.active .settings-modal {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    flex: 1;
+}
+
+.modal-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 15px 20px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Settings sections */
+.settings-section {
+    margin-bottom: 25px;
+}
+
+.settings-section h3 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: var(--accent);
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.setting-item label {
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.setting-item input[type="range"] {
+    flex: 1;
+    height: 5px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+    outline: none;
+    -webkit-appearance: none;
+}
+
+.setting-item input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 15px;
+    height: 15px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.setting-item input[type="range"]::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background-color: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    border: none;
+}
+
+.setting-item input[type="color"] {
+    height: 30px;
+    width: 60px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.setting-item input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.setting-item input[type="color"]::-webkit-color-swatch {
+    border: none;
+    border-radius: 4px;
+}
+
+.setting-value {
+    width: 60px;
+    text-align: right;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.small-btn {
+    background-color: transparent;
+    color: var(--text-secondary);
+    border: none;
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.small-btn:hover {
+    background-color: rgba(187, 134, 252, 0.4);
+}
+
+.secondary-btn {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.secondary-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Status notification */
+.status-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 12px 20px;
+    background-color: var(--bg-sidebar);
+    color: var(--text-primary);
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.3s, transform 0.3s;
+    font-size: 14px;
+    max-width: 300px;
+}
+
+.status-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.status-notification.success {
+    border-left: 4px solid var(--accent);
+}
+
+.status-notification.error {
+    border-left: 4px solid var(--error);
+}
+
+.status-notification.warning {
+    border-left: 4px solid #f0ad4e;
+}
+
+/* New styles for the footer buttons row */
+.footer-buttons {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 8px;
+}
+
+.icon-btn {
+    background-color: var(--bg-note);
+    color: var(--text-primary);
+    border: none;
+    border-radius: 4px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.icon-btn:hover {
+    background-color: var(--bg-note-hover);
+    color: var(--accent);
+}
+
+.icon-btn i {
+    font-size: 1.2rem;
+}
+
+/* Responsive adjustments for the icon buttons */
+@media (max-width: 768px) {
+    .footer-buttons {
+        margin-top: 5px;
+    }
+    
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+/* Add header action styles here instead of duplicating the header definition */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Increase gap between header action items */
+}
+
+.storage-indicator-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-right: 10px; /* Add additional margin to the right */
+    padding: 5px;
+    border-radius: 4px;
+    position: relative;
+}
+
+.storage-percent {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Danger Zone in Settings */
+.danger-zone {
+    border: 1px solid var(--error);
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+    background-color: rgba(207, 102, 121, 0.1);
+}
+
+.danger-zone-header {
+    color: var(--error);
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.danger-zone-description {
+    margin-bottom: 15px;
+}
+
+.danger-zone-description p {
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.danger-zone button.danger {
+    background-color: var(--error);
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.danger-zone button.danger:hover {
+    background-color: #e05a6e;
+}
+
+/* Create Note Close Button */
+.create-note-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #ff3b3b;
+    font-size: 18px;
+    z-index: 10;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.create-note-close:hover {
+    background-color: rgba(255, 59, 59, 0.1);
+}
+
+.create-note {
+    position: relative;
+}
+
+/* Tag Suggestions */
+.tag-suggestions {
+    position: absolute;
+    background-color: var(--bg-sidebar);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    max-height: 200px;
+    max-width: 250px;
+    overflow-y: auto;
+    z-index: 10000; /* Ensure this is higher than other elements */
+}
+
+.tag-suggestion {
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tag-suggestion:hover, .tag-suggestion.selected {
+    background-color: var(--accent-light);
+    color: var(--accent);
+}
+
+.tag-suggestion.no-suggestions {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.tag-suggestion::after {
+    content: attr(data-count);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-left: 8px;
+}
+
+/* Tag Manager Styles */
+.tag-manager-modal {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); /* Enhanced shadow for better depth */
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Added subtle border */
+    width: 600px;
+    max-width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateY(-20px); /* Added initial position for animation */
+    opacity: 0; /* Start with opacity 0 */
+    transition: transform 0.3s ease, opacity 0.3s ease; /* Smooth transition */
+}
+
+.tag-manager-search {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tag-manager-search input {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--input-bg-color);
+    color: var(--text-color);
+}
+
+.tag-manager-list {
+    padding: 16px;
+    overflow-y: auto;
+    max-height: 400px;
+}
+
+/* Add styles for tag manager items */
+.tag-manager-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+.tag-manager-item:hover {
+    background-color: var(--bg-note-hover);
+}
+
+.tag-name {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.tag-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-tag, .delete-tag {
+    background-color: transparent;
+    border: none;
+    border-radius: 4px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.edit-tag:hover {
+    background-color: var(--accent-light);
+    color: var(--accent);
+}
+
+.delete-tag:hover {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: var(--error);
+}
+
+/* Sidebar Header Container Styles */
+.sidebar-header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.sidebar-title {
+    font-weight: 600;
+    font-size: 16px;
+}
+
+.tag-manager-btn {
+    background-color: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 5px;
+    border-radius: 4px;
+    transition: color 0.2s, background-color 0.2s;
+}
+
+.tag-manager-btn:hover {
+    color: var(--accent-color);
+    background-color: var(--hover-color);
+}
+
+/* No tags message */
+.no-tags-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Update Tag Manager Modal styling */
+.modal-overlay#tag-manager-modal {
+    display: flex; /* Changed from none to flex */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.85); /* Increased opacity from 0.5 to 0.85 for better readability */
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    opacity: 0; /* Added for hiding initially */
+    pointer-events: none; /* Added to prevent interaction while hidden */
+    transition: opacity 0.3s ease; /* Added for smooth transition */
+}
+
+.modal-overlay#tag-manager-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Animation for tag manager modal */
+.modal-overlay#tag-manager-modal.active .tag-manager-modal {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Styles for the confirmation dialog within the tag manager modal */
+.confirmation-dialog {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100; /* Higher than the modal itself */
+}
+
+.confirmation-dialog-content {
+    background-color: var(--surface-color);
+    border-radius: 8px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+}
+
+.confirmation-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.confirmation-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.confirmation-body {
+    padding: 20px 16px;
+}
+
+.confirmation-body p {
+    margin-bottom: 12px;
+}
+
+.confirmation-body p:last-child {
+    margin-bottom: 0;
+}
+
+.confirmation-footer {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* Add New Tag button styles */
+.add-new-tag-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 15px;
+    background-color: var(--accent-light);
+    color: var(--accent);
+    border-radius: 4px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-weight: 500;
+}
+
+.add-new-tag-button:hover {
+    background-color: rgba(187, 134, 252, 0.3);
+}
+
+.add-new-tag-button i {
+    font-size: 14px;
+}
+
+/* Form field styles for the new tag dialog */
+.form-field {
+    margin-bottom: 16px;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.form-field input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-note);
+    color: var(--text-primary);
+}
+
+.form-field input[type="text"]:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.checkbox-field {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.checkbox-field label {
+    margin-bottom: 0;
+}
+
+.checkbox-field input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+}
+
+.form-help-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* Styles for manually created tags */
+.manual-tag {
+    /* Keep simple styling to not be too distracting */
+    background-color: rgba(187, 134, 252, 0.05);
+}
+
+.manual-tag-icon {
+    color: var(--accent);
+    font-size: 0.8em;
+    margin-right: 4px;
+}
+
+/* Color preview in tag manager */
+.color-preview {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+.tag-preview {
+    display: flex;
+    align-items: center;
+}
+
+/* Color picker container in edit tag dialog */
+.color-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.color-preview-container {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.color-preview-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.tag-name-display {
+    padding: 8px 0;
+    color: var(--text-primary);
+}
+
+/* Sample tag in preview */
+.sample-tag {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+/* Styling for tag manager items */
+.tag-manager-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+}
+
+/* Update createNoteElement function to apply tag colors */
+
+/* Version display styling */
+.version-display {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: center;
+    padding: 5px 0;
+    margin-top: 5px;
+    border-top: 1px solid var(--border-color);
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.version-display:hover {
+    opacity: 1;
+    color: var(--accent);
+}
+
+/* Update indicator */
+.update-available {
+    display: inline-block;
+    color: var(--accent);
+    font-weight: bold;
+    animation: pulse 2s infinite;
+    margin-left: 5px;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0.5;
+    }
+}
+
+/* Version information in settings */
+.version-info {
+    background-color: var(--bg-note);
+    border-radius: 8px;
+    margin-bottom: 15px;
+    border: 1px solid var(--border-color);
+    max-height: 250px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--accent-light) var(--bg-note);
+}
+
+/* GitHub update container */
+.github-update-container {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.github-update-container h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.check-updates-btn {
+    background-color: var(--bg-sidebar);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: background-color 0.2s;
+}
+
+.check-updates-btn:hover {
+    background-color: var(--accent);
+    color: white;
+}
+
+.check-updates-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.last-checked {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin: 5px 0;
+}
+
+.up-to-date {
+    color: #4CAF50;
+    font-weight: 500;
+}
+
+.error {
+    color: #f44336;
+    font-weight: 500;
+}
+
+.update-version {
+    color: var(--accent);
+}
+
+.github-update-button {
+    display: inline-block;
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 15px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    margin-top: 10px;
+    text-decoration: none;
+    transition: background-color 0.2s;
+}
+
+.github-update-button:hover {
+    background-color: var(--accent-darker, #9966cc);
+    text-decoration: none;
+    color: white;
+}
+
+.github-update-button i {
+    margin-right: 5px;
+}
+
+.version-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+.version-info::-webkit-scrollbar-track {
+    background: var(--bg-note);
+}
+
+.version-info::-webkit-scrollbar-thumb {
+    background-color: var(--accent-light);
+    border-radius: 3px;
+}
+
+.version-info-content {
+    padding: 16px;
+}
+
+/* Table layout for version information */
+.version-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+    table-layout: fixed;
+}
+
+.version-table tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.version-table tr:last-child {
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 10px;
+}
+
+.version-table td {
+    padding: 10px 5px;
+}
+
+.version-label {
+    font-weight: 500;
+    color: var(--text-primary);
+    width: 35%;
+}
+
+.version-value {
+    color: var(--accent);
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    font-size: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    width: 65%;
+    word-break: break-all;
+}
+
+.version-info-description {
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.version-info-description p {
+    margin-bottom: 8px;
+}
+
+.version-info-description ul {
+    margin: 10px 0 10px 20px;
+    color: var(--text-secondary);
+}
+
+.version-info-description li {
+    margin-bottom: 5px;
+    line-height: 1.5;
+}
+
+.version-info-description strong {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Voice dictation styles */
+.recording-indicator {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--bg-sidebar);
+    color: var(--text-primary);
+    padding: 12px 20px;
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    z-index: 10000;
+    border: 1px solid var(--accent);
+    animation: fadeIn 0.3s ease;
+}
+
+.recording-indicator i.pulse {
+    color: #ff3b3b;
+    animation: pulse 1.5s infinite;
+}
+
+.recording-indicator span {
+    font-size: 14px;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stop-recording {
+    background-color: rgba(255, 59, 59, 0.2);
+    border: none;
+    color: #ff3b3b;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-left: 10px;
+}
+
+.stop-recording:hover {
+    background-color: rgba(255, 59, 59, 0.4);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, 20px);
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+/* Additional toolbar button state for active dictation */
+.toolbar button[data-command="voiceDictation"].active {
+    background-color: rgba(255, 59, 59, 0.2);
+}
+
+.toolbar button[data-command="voiceDictation"].active .material-icons {
+    color: #ff3b3b;
+    animation: pulse 1.5s infinite;
+}
