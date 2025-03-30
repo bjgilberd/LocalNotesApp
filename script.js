@@ -3794,14 +3794,11 @@ function setupSidebarToggle() {
     
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('sidebar-toggle');
+    // --- Add overlay element --- 
+    const overlay = document.querySelector('.sidebar-overlay'); // Get the overlay
     
-    if (!sidebar) {
-        console.error("Sidebar element not found!");
-        return;
-    }
-    
-    if (!toggleBtn) {
-        console.error("Sidebar toggle button not found!");
+    if (!sidebar || !toggleBtn || !overlay) { // Check for overlay too
+        console.error("Sidebar, toggle button, or overlay element not found!");
         return;
     }
     
@@ -3811,76 +3808,89 @@ function setupSidebarToggle() {
         return;
     }
     
-    console.log("Sidebar and toggle button found, initializing toggle behavior");
+    console.log("Sidebar, toggle button, and overlay found, initializing toggle behavior");
     
-    // Force initial state for mobile - always start collapsed
+    // Get the icon element inside the button
+    const icon = toggleBtn.querySelector('i'); 
+    if (!icon) {
+        console.error("Icon element inside toggle button not found!");
+        return; 
+    }
+
+    // Force initial state for mobile - always start collapsed (not open)
     if (window.innerWidth <= 768) {
-        console.log("Mobile width detected, collapsing sidebar");
-        sidebar.classList.add('collapsed');
-        sidebar.classList.remove('expanded');
-        toggleBtn.style.display = 'block';
-        
-        // Ensure correct icon is showing
-        const icon = toggleBtn.querySelector('i');
-        icon.classList.remove('fa-chevron-left');
-        icon.classList.add('fa-chevron-right');
+        console.log("Mobile width detected, ensuring sidebar is closed");
+        sidebar.classList.remove('open'); // Use 'open'
+        overlay.classList.remove('visible');
+        toggleBtn.style.display = 'flex'; // Use flex as per MD style
+        icon.textContent = 'menu'; // Initial icon: menu
     } else {
-        console.log("Desktop width detected, showing sidebar");
+        console.log("Desktop width detected, hiding toggle");
+        sidebar.classList.remove('open'); // Ensure closed on desktop too
+        overlay.classList.remove('visible');
         toggleBtn.style.display = 'none';
     }
     
     // Remove old event listeners by cloning the button
     const newToggleBtn = toggleBtn.cloneNode(true);
+    // Re-fetch the icon from the *cloned* button
+    const newIcon = newToggleBtn.querySelector('i'); 
     toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
     
     // Mark as initialized to prevent duplicate setup
     newToggleBtn.dataset.initialized = 'true';
     
-    // Add a new, single event listener
+    // --- Event Listener for Toggle Button --- 
     newToggleBtn.addEventListener('click', function(event) {
-        // Prevent event bubbling
         event.stopPropagation();
         event.preventDefault();
         
-        console.log("Toggle button clicked - single handler");
-        sidebar.classList.toggle('collapsed');
-        sidebar.classList.toggle('expanded');
+        console.log("Toggle button clicked");
+        const isOpen = sidebar.classList.toggle('open'); // Toggle 'open' class
+        overlay.classList.toggle('visible', isOpen); // Sync overlay visibility
         
-        // Update the icon direction based on sidebar state
-        const icon = newToggleBtn.querySelector('i');
-        if (sidebar.classList.contains('expanded')) {
-            console.log("Expanding sidebar");
-            icon.classList.remove('fa-chevron-right');
-            icon.classList.add('fa-chevron-left');
+        // Update the icon based on sidebar state
+        if (isOpen) {
+            console.log("Opening sidebar");
+            newIcon.textContent = 'close'; // Icon when open: close
         } else {
-            console.log("Collapsing sidebar");
-            icon.classList.remove('fa-chevron-left');
-            icon.classList.add('fa-chevron-right');
+            console.log("Closing sidebar");
+            newIcon.textContent = 'menu'; // Icon when closed: menu
         }
     });
+
+    // --- Event Listener for Overlay Click --- 
+    overlay.addEventListener('click', function() {
+        console.log("Overlay clicked");
+        sidebar.classList.remove('open');
+        overlay.classList.remove('visible');
+        newIcon.textContent = 'menu'; // Reset icon to menu
+    });
     
-    // Handle window resize with debounce to prevent multiple rapid triggers
+    // --- Resize Handler --- 
     let resizeTimeout;
     window.addEventListener('resize', function() {
         clearTimeout(resizeTimeout);
         resizeTimeout = setTimeout(function() {
             if (window.innerWidth > 768) {
-                // Reset classes on larger screens
+                // Reset state on larger screens
                 console.log("Window resized to desktop width");
-                sidebar.classList.remove('collapsed', 'expanded');
+                sidebar.classList.remove('open'); // Use 'open'
+                overlay.classList.remove('visible');
                 newToggleBtn.style.display = 'none';
+                // No need to change icon text here as button is hidden
             } else {
                 // Ensure toggle button is visible on small screens
                 console.log("Window resized to mobile width");
-                newToggleBtn.style.display = 'block';
-                
-                // If sidebar doesn't have a state class, collapse it
-                if (!sidebar.classList.contains('expanded')) {
-                    sidebar.classList.add('collapsed');
-                    sidebar.classList.remove('expanded');
+                newToggleBtn.style.display = 'flex'; // Use flex
+                // Check current state and set icon accordingly
+                if (sidebar.classList.contains('open')) {
+                    newIcon.textContent = 'close';
+                } else {
+                    newIcon.textContent = 'menu';
                 }
             }
-        }, 250); // Debounce time in ms
+        }, 250); // Debounce time
     });
     
     console.log("Sidebar toggle setup complete");
@@ -4044,37 +4054,41 @@ function setupTagMultiSelectHandlers() {
 
 // Create or update empty state display
 function createEmptyState(searchTerm, selectedTags) {
-    // Check if we have a valid empty state element
-    const currentEmptyState = document.getElementById('empty-state');
-    
-    if (currentEmptyState) {
-        currentEmptyState.style.display = 'flex';
-        const emptyStateText = currentEmptyState.querySelector('.empty-state-text');
-        
-        // Only set text if the element exists
-        if (emptyStateText) {
-            if (viewMode === 'archived') {
-                emptyStateText.textContent = 'No archived notes yet.';
-            } else if (!selectedTags.includes('all') || searchTerm) {
-                emptyStateText.textContent = 'No notes match your current filter. Try a different tag or search term.';
-            } else {
-                emptyStateText.textContent = 'No notes yet. Start by creating your first note above.';
-            }
-        }
+    let emptyStateDiv = document.getElementById('empty-state');
+    const notesContainer = document.getElementById('notes-container');
+
+    if (!emptyStateDiv) {
+        // Create empty state div if it doesn't exist
+        emptyStateDiv = document.createElement('div');
+        emptyStateDiv.id = 'empty-state';
+        emptyStateDiv.className = 'empty-state';
+        notesContainer.appendChild(emptyStateDiv);
+    }
+
+    // Ensure it's visible and styled correctly by CSS
+    emptyStateDiv.style.display = 'flex'; 
+
+    // Clear previous content
+    emptyStateDiv.innerHTML = ''; 
+
+    // Create and add the icon (Material Icons)
+    const iconElement = document.createElement('i');
+    iconElement.className = 'material-icons';
+    // Choose an appropriate icon, e.g., 'description', 'notes', 'inbox'
+    iconElement.textContent = 'description'; 
+    emptyStateDiv.appendChild(iconElement);
+
+    // Create and add the paragraph for the message
+    const paragraphElement = document.createElement('p');
+    emptyStateDiv.appendChild(paragraphElement);
+
+    // Determine and set the message text
+    if (viewMode === 'archived') {
+        paragraphElement.textContent = 'The archive is empty.';
+    } else if (selectedTags && !selectedTags.includes('all') || searchTerm) {
+        paragraphElement.textContent = 'No notes match your current filter.';
     } else {
-        // Create empty state if it doesn't exist
-        const newEmptyState = document.createElement('div');
-        newEmptyState.id = 'empty-state';
-        newEmptyState.className = 'empty-state';
-        newEmptyState.style.display = 'flex';
-        newEmptyState.innerHTML = `
-            <div class="empty-state-content">
-                <div class="empty-state-icon">📝</div>
-                <div class="empty-state-text">No notes yet. Start by creating your first note above.</div>
-            </div>
-        `;
-        notesContainer.appendChild(newEmptyState);
-        emptyState = newEmptyState;
+        paragraphElement.textContent = 'No notes yet. Create one!';
     }
 }
 
@@ -5527,14 +5541,15 @@ function createNewTag(tagName, scanExistingNotes = false, tagColor = null) {
                 
                 Logger.log(`Modified ${modifiedNotesCount} notes to add tag #${tagName}`);
                 
-                // Add the new tag to the tags store with the count
+                // Add the new tag to the tags store with the count and COLOR
                 const addTagRequest = tagsStore.add({
                     name: tagName,
-                    count: tagCount
+                    count: tagCount,
+                    color: tagColor // --- Fix: Added color property ---
                 });
                 
                 addTagRequest.onsuccess = () => {
-                    Logger.log(`Tag #${tagName} added successfully with count ${tagCount}`);
+                    Logger.log(`Tag #${tagName} added successfully with count ${tagCount} and color ${tagColor}`); // Log color too
                     
                     // Refresh tag displays
                     loadAllTagsForManager();
@@ -5564,14 +5579,15 @@ function createNewTag(tagName, scanExistingNotes = false, tagColor = null) {
                 showStatusNotification(`Error scanning notes: ${error}`, 'error');
             };
         } else {
-            // Just add the tag with count 0 without scanning notes
+            // Just add the tag with count 0 and COLOR without scanning notes
             const addTagRequest = tagsStore.add({
                 name: tagName,
-                count: 0
+                count: 0,
+                color: tagColor // --- Fix: Added color property ---
             });
             
             addTagRequest.onsuccess = () => {
-                Logger.log(`Tag #${tagName} added successfully with count 0`);
+                Logger.log(`Tag #${tagName} added successfully with count 0 and color ${tagColor}`); // Log color too
                 
                 // Refresh tag displays
                 loadAllTagsForManager();
@@ -6383,4 +6399,90 @@ function deleteTag(tagName) {
         Logger.error(`Error deleting tag ${tagName}:`, error);
         showStatusNotification(`Error deleting tag: ${error}`, 'error');
     };
+}
+
+/**
+ * Fetches all tags from the database.
+ * @returns {Promise<Array<Object>>} A promise that resolves with an array of tag objects.
+ */
+function getAllTagsFromDB() {
+    return new Promise((resolve, reject) => {
+        if (!db) {
+            Logger.error('Database not available for fetching tags.');
+            return reject('Database not available');
+        }
+        const transaction = db.transaction([TAGS_STORE], 'readonly');
+        const store = transaction.objectStore(TAGS_STORE);
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+            resolve(request.result || []);
+        };
+        request.onerror = (event) => {
+            Logger.error('Error fetching all tags:', event.target.error);
+            reject('Error fetching all tags: ' + event.target.error);
+        };
+    });
+}
+
+/**
+ * Sets up the event listener for the tag manager search input.
+ */
+async function setupTagManagerSearch() {
+    const searchInput = document.getElementById('tag-manager-search-input');
+    if (!searchInput) {
+        Logger.error('Tag manager search input not found.');
+        return;
+    }
+
+    // Debounce the input handler to avoid excessive filtering on rapid typing
+    const debouncedFilter = debounce(async () => {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        try {
+            Logger.log(`Filtering tag manager list for term: "${searchTerm}"`);
+            const allTags = await getAllTagsFromDB(); // Fetch all tags
+            // Filter tags based on the search term
+            const filteredTags = allTags.filter(tag => 
+                tag.name.toLowerCase().includes(searchTerm)
+            );
+            displayTagsInManager(filteredTags); // Display the filtered list
+        } catch (error) {
+            Logger.error("Error filtering tags in manager:", error);
+            showStatusNotification('Error filtering tags', 'error');
+            // Optionally display all tags again or show an error in the list
+            displayTagsInManager([]); // Show empty list on error for clarity
+        }
+    }, 250); // 250ms debounce delay
+
+    searchInput.addEventListener('input', debouncedFilter);
+}
+
+/**
+ * Opens the tag manager modal and loads the tags.
+ */
+function openTagManagerModal() {
+    Logger.log('Opening tag manager modal');
+    const modalOverlay = document.getElementById('tag-manager-modal');
+    modalOverlay.classList.add('active');
+    loadAllTagsForManager(); // Load all tags initially
+    setupTagManagerSearch(); // Setup the search functionality <<< Error was here
+    
+    // Add event listener for the Add New Tag button if it doesn't exist
+    const tagListContainer = document.getElementById('tag-manager-list');
+    if (tagListContainer && !tagListContainer.querySelector('.add-new-tag-button')) {
+         const addNewTagButton = document.createElement('button');
+         addNewTagButton.className = 'add-new-tag-button';
+         addNewTagButton.innerHTML = '<i class="fas fa-plus"></i> Add New Tag';
+         addNewTagButton.onclick = openAddNewTagDialog;
+         // Prepend the button to the top of the list container
+         tagListContainer.insertBefore(addNewTagButton, tagListContainer.firstChild);
+    }
+
+    // Focus the search input shortly after opening
+    setTimeout(() => {
+        const searchInput = document.getElementById('tag-manager-search-input');
+        if (searchInput) {
+            searchInput.focus();
+        }
+    }, 150);
 }

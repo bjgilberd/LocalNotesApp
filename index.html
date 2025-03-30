@@ -8,45 +8,13 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <!-- Updated sidebar toggle styling for mobile -->
-    <style>
-        @media (max-width: 768px) {
-            #sidebar-toggle {
-                display: block !important;
-                position: fixed;
-                top: 60px;
-                left: 0;
-                z-index: 1000;
-                background-color: #1a1a1a;
-                color: white;
-                border: none;
-                border-top-right-radius: 4px;
-                border-bottom-right-radius: 4px;
-                padding: 10px 8px;
-                cursor: pointer;
-                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
-                width: 30px;
-                height: 50px;
-            }
-            
-            #sidebar {
-                position: fixed;
-                left: calc(-1 * var(--sidebar-width));
-                z-index: 100;
-                transition: left 0.3s;
-            }
-            
-            #sidebar.expanded {
-                left: 0;
-            }
-            
-            #sidebar.collapsed {
-                left: calc(-1 * var(--sidebar-width));
-            }
-        }
-    </style>
 </head>
 <body>
     <header>
+        <!-- Add sidebar toggle button here -->
+        <button id="sidebar-toggle" class="sidebar-toggle header-btn" title="Toggle Sidebar" data-no-duplicate-events="true">
+            <i class="material-icons">menu</i> <!-- Changed icon -->
+        </button>
         <div class="logo">Local Notes</div>
         <div class="search-container">
             <span class="search-icon"><i class="fas fa-search"></i></span>
@@ -104,10 +72,10 @@
             </div>
         </aside>
         
-        <!-- Add sidebar toggle button with data attribute to prevent event conflicts -->
-        <button id="sidebar-toggle" class="sidebar-toggle" title="Toggle Sidebar" data-no-duplicate-events="true">
+        <!-- Sidebar toggle button removed from here -->
+        <!-- <button id="sidebar-toggle" class="sidebar-toggle" title="Toggle Sidebar" data-no-duplicate-events="true">
             <i class="fas fa-chevron-right"></i>
-        </button>
+        </button> -->
 
         <main class="main-content">
             <!-- Google Keep style compact note creation -->
@@ -388,6 +356,9 @@
 
     <!-- Hidden file input for image uploads -->
     <input type="file" id="image-upload" accept="image/*" style="display: none;">    
+
+    <!-- Sidebar Overlay for mobile -->
+    <div class="sidebar-overlay"></div>
 
     <script src="script.js"></script>
     </body>
