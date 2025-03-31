@@ -3,7 +3,7 @@ const DB_NAME = 'LocalNotesDB';
 const DB_VERSION = 2; // Increase version to trigger database upgrade
 const NOTES_STORE = 'notes';
 const TAGS_STORE = 'tags';
-const APP_VERSION = '1.1.1'; // Application version - updated for GitHub integration
+const APP_VERSION = '1.2.0'; // Application version - updated for resize handle fixes
 const APP_VERSION_KEY = 'appVersion'; // Key for storing version in local storage
 const VERSION_CHECK_URL = 'https://raw.githubusercontent.com/username/LocalNotesApp/main/version.json'; // Replace with your actual GitHub or hosting URL
 
@@ -985,8 +985,25 @@ function expandCreateNote() {
     console.log("expandCreateNote called");
     
     if (createNoteCompact && createNoteExpanded) {
+        // === LOG STYLE BEFORE ===
+        console.log("Style BEFORE active:", 
+            `Opacity: ${window.getComputedStyle(createNoteExpanded).opacity}`, 
+            `Transform: ${window.getComputedStyle(createNoteExpanded).transform}`
+        );
+        // ========================
+
         createNoteCompact.style.display = 'none';
         createNoteExpanded.classList.add('active');
+
+        // === LOG STYLE AFTER ===
+        // Use setTimeout to allow styles to apply
+        setTimeout(() => {
+            console.log("Style AFTER active:", 
+                `Opacity: ${window.getComputedStyle(createNoteExpanded).opacity}`, 
+                `Transform: ${window.getComputedStyle(createNoteExpanded).transform}`
+            );
+        }, 0);
+        // =======================
         
         // Create Save button if it doesn't exist
         const existingSaveBtn = document.getElementById('create-note-btn');
@@ -1021,16 +1038,57 @@ function expandCreateNote() {
             }
         }
         
-        setTimeout(() => {
-            // Focus on the content area and ensure it's editable
+        // Define the setup function to run after transition
+        const setupAfterTransition = (event) => {
+            // --- SIMPLIFIED CONDITION --- 
+            // Ensure we only run this for the #create-note element itself
+            // REMOVED condition check as we call this directly now
+            console.log(`#create-note logic running after timeout, attempting to set up resizing.`); // Updated log
             if (createNoteContent) {
                 createNoteContent.contentEditable = 'true';
                 createNoteContent.focus();
-                
-                // Set up paste handlers for image support
                 setupPasteHandlers();
+                
+                // === ADD DEBUG LOG ===
+                console.log("Checking for handle element:", document.getElementById('create-resize-handle'));
+                // ===================
+
+                setupModalResizing('create-note', 'create-resize-handle');
             }
-        }, 300);
+            // REMOVED: Remove the listener so it doesn't fire multiple times
+            // createNoteExpanded.removeEventListener('transitionend', setupAfterTransition);
+        };
+
+        // === FORCE REFLOW (Read offsetHeight) ===
+        const _unused = createNoteExpanded.offsetHeight; 
+        // =======================================
+
+        // === LOG BEFORE ADDING LISTENER ===
+        // console.log("About to add transitionend listener to #create-note"); // REMOVED
+        // ==================================
+        
+        // REMOVED: Add the event listener
+        // createNoteExpanded.addEventListener('transitionend', setupAfterTransition);
+
+        // REMOVED: === TEMPORARY DEBUG LISTENER on document.body ===
+        // document.body.addEventListener('transitionend', function debugBodyListener(event) {
+        //     // Log ALL transitionend events bubbling to the body
+        //     console.log(`[DEBUG BODY LISTENER] transitionend fired on:`, event.target, `Property: ${event.propertyName}`);
+        //     // Specifically check if it came from our target element
+        //     if (event.target === createNoteExpanded) {
+        //         console.log(`[DEBUG BODY LISTENER] Event from #create-note detected! Property: ${event.propertyName}`);
+        //     }
+        //     // Remove this listener after first use (or after a delay) to avoid clutter
+        //     // document.body.removeEventListener('transitionend', debugBodyListener); 
+        //     // Let's leave it for now to see if multiple events fire
+        // });
+        // ================================================
+
+        // === FALLBACK: Use setTimeout instead of transitionend ===
+        console.log("Using setTimeout fallback instead of transitionend");
+        setTimeout(setupAfterTransition, 350); // 350ms > 300ms transition
+        // ========================================================
+
     } else {
         console.error("Note creation elements not found:", {
             createNoteCompact: createNoteCompact,
@@ -1308,21 +1366,32 @@ function closeCreateNote() {
     
     if (hasTitle || hasContent) {
         if (confirm('Do you want to save your note?')) {
-            createNote();
-        } else {
-            // Clear form
-            createNoteTitle.innerHTML = '';
-            createNoteContent.innerHTML = '';
+            createNote(); // This will also close and refresh layout
+            return; // Exit early as createNote handles closing
         }
     }
     
+    // Clear form if not saving
+    createNoteTitle.textContent = '';
+    createNoteContent.innerHTML = '';
+    
     // Hide expanded form with animation
     createNoteExpanded.classList.remove('active');
+
+    // === Reset inline styles from resizing ===
+    createNoteExpanded.style.height = '';
+    createNoteExpanded.style.width = '';
+    // ========================================
     
     // Wait for the transition to complete before showing compact form
+    // and refreshing the layout
     setTimeout(() => {
         createNoteCompact.style.display = 'flex';
-    }, 300);
+        // Ensure the expanded note is truly gone from layout flow
+        createNoteExpanded.style.display = 'none'; 
+        // Refresh masonry layout now that the element is gone
+        refreshMasonryLayout(); 
+    }, 300); // Match transition duration
 }
 
 // Load notes from IndexedDB
@@ -2035,8 +2104,11 @@ function openNoteModal(note) {
     
     // Make images resizable
     setupImageResizeHandles();
+
+    // === UPDATED CALL ===
+    setupModalResizing('note-modal-box', 'note-resize-handle'); 
+    // ====================
     
-    // Store original content to detect changes
     originalNoteContent = editNoteContent.innerHTML;
     originalNoteTitle = editNoteTitle.textContent;
     
@@ -6586,4 +6658,77 @@ function openTagManagerModal() {
             searchInput.focus();
         }
     }, 150);
+}
+
+// Add this function somewhere in script.js
+function setupModalResizing(modalId, handleId) {
+    const modal = document.getElementById(modalId);
+    const handle = document.getElementById(handleId);
+    
+    if (!modal || !handle) {
+        console.error(`Modal ('${modalId}') or handle ('${handleId}') not found for resizing setup.`);
+        return;
+    }
+    
+    let isResizing = false;
+    let startX, startY, initialWidth, initialHeight;
+    
+    // --- Mousedown on handle --- 
+    // Remove old listener before adding new one to prevent duplicates
+    const newHandle = handle.cloneNode(true);
+    handle.parentNode.replaceChild(newHandle, handle);
+    
+    newHandle.addEventListener('mousedown', function(e) {
+        isResizing = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        initialWidth = modal.offsetWidth;
+        initialHeight = modal.offsetHeight;
+        
+        e.preventDefault();
+        
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+        
+        document.body.classList.add('is-resizing-modal');
+        modal.style.userSelect = 'none';
+        
+        console.log(`Start resize for ${modalId}:`, { startX, startY, initialWidth, initialHeight });
+    });
+    
+    // --- Mousemove on document --- 
+    function doResize(e) {
+        if (!isResizing) return;
+        
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        
+        let newWidth = initialWidth + dx;
+        let newHeight = initialHeight + dy;
+        
+        const minWidth = parseInt(getComputedStyle(modal).minWidth) || 300;
+        const minHeight = parseInt(getComputedStyle(modal).minHeight) || 250;
+        
+        newWidth = Math.max(minWidth, newWidth);
+        newHeight = Math.max(minHeight, newHeight);
+        
+        // === CONFIRMATION: Applying styles to the correct 'modal' variable ===
+        modal.style.width = `${newWidth}px`;
+        modal.style.height = `${newHeight}px`;
+        // ======================================================================
+    }
+    
+    // --- Mouseup on document --- 
+    function stopResize(e) {
+        if (isResizing) {
+            isResizing = false;
+            document.removeEventListener('mousemove', doResize);
+            document.removeEventListener('mouseup', stopResize);
+            
+            document.body.classList.remove('is-resizing-modal');
+            modal.style.userSelect = '';
+            
+            console.log(`Stop resize for ${modalId}. Final dimensions:`, modal.style.width, modal.style.height);
+        }
+    }
 }

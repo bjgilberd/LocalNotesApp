@@ -313,18 +313,20 @@ header {
     background-color: var(--bg-note);
     border-radius: 8px;
     margin: 20px auto;
-    max-width: 600px;
+    /* max-width: 600px; REMOVED to allow horizontal resize */
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15), 0 8px 12px rgba(0, 0, 0, 0.1);
     display: none; /* Initially hidden */
     flex-direction: column;
-    transition: box-shadow 0.3s;
     overflow: hidden;
     position: relative;
     opacity: 0;
     transform: translateY(-10px);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    /* Combined and corrected transition properties */
+    transition: opacity 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 	margin-top: 40px; /* Reset existing margin */
     margin-bottom: 20px; /* Keep bottom margin */
+    /* Add display:flex for active state here too */
+    display: flex;
 }
 
 .create-note.active {
@@ -342,6 +344,7 @@ header {
     background: transparent;
     color: var(--text-primary);
     outline: none;
+    flex-shrink: 0; /* Prevent title shrinking */
 }
 
 .create-note-title:empty:before {
@@ -359,6 +362,9 @@ header {
     color: var(--text-primary);
     outline: none;
     resize: none;
+    /* Add flex properties */
+    flex: 1;
+    overflow-y: auto;
 }
 
 .create-note-content:empty:before {
@@ -728,8 +734,10 @@ button.danger:hover {
 .note-modal {
     background-color: var(--bg-note);
     width: 600px;
-    max-width: 90%;
-    max-height: 90vh;
+    max-width: 95%; /* Slightly increase max width */
+    max-height: 95vh; /* Slightly increase max height */
+    min-width: 350px;  /* Add minimum width */
+    min-height: 300px; /* Add minimum height */
     border-radius: 8px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     display: flex;
@@ -737,7 +745,7 @@ button.danger:hover {
     transform: translateY(20px);
     opacity: 0;
     transition: transform 0.3s, opacity 0.3s;
-    overflow: hidden;
+    overflow: auto;   /* Changed from hidden */
 }
 
 .modal-overlay.active .note-modal {
@@ -762,7 +770,6 @@ button.danger:hover {
     padding: 0 16px 16px;
     overflow-y: auto;
     flex: 1;
-    min-height: 200px;
 }
 
 .edit-note-title {
@@ -784,7 +791,6 @@ button.danger:hover {
 .editable {
     outline: none;
     width: 100%;
-    min-height: 200px;
 }
 
 /* Improved styling for lists */
@@ -810,6 +816,7 @@ button.danger:hover {
 .note-modal-actions-right {
     display: flex;
     gap: 8px;
+    align-items: center;
 }
 
 /* "Unsaved changes" indicator */
@@ -2574,3 +2581,51 @@ ul.checklist li input[type="checkbox"] {
 }
 
 /* === End Responsive Design Block === */
+
+/* Add this to styles.css */
+.note-resize-handle {
+    width: 16px;         /* Size of the handle */
+    height: 16px;
+    background-color: var(--accent); /* Use accent color */
+    opacity: 0.5;        /* Make it slightly transparent */
+    cursor: nwse-resize; /* Diagonal resize cursor */
+    margin-left: 8px;    /* Space from Save button */
+    border-radius: 2px;
+    transition: opacity 0.2s;
+}
+
+.note-resize-handle:hover {
+    opacity: 1; /* Full opacity on hover */
+}
+
+#edit-toolbar {
+    /* Add this to prevent shrinking */
+    flex-shrink: 0;
+    /* Existing toolbar styles (border, padding etc) should remain */
+    /* You might need to adjust padding/margins if this causes overlap */
+}
+
+/* Specific styles for note resizing handles */
+.note-resize-handle {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px; /* Slightly larger */
+    height: 12px;
+    background-color: var(--accent);
+    cursor: se-resize;
+    z-index: 10;
+    border-top-left-radius: 4px; /* Style to indicate corner */
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.note-resize-handle:hover {
+    opacity: 1;
+}
+
+/* Ensure create note area can be resized */
+#create-note {
+    /* Add overflow:hidden if not already present, important for resize */
+    overflow: hidden;
+}

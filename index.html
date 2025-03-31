@@ -154,6 +154,7 @@
                         <button id="create-note-btn" class="primary">Create Note</button>
                     </div>
                 </div>
+                <div id="create-resize-handle" class="note-resize-handle"></div>
             </div>
 
             <div class="notes-container" id="notes-container">
@@ -166,60 +167,60 @@
     </div>
 
     <div class="modal-overlay" id="note-modal">
-        <div class="note-modal">
+        <div class="note-modal" id="note-modal-box">
             <div class="note-modal-header">
                 <div class="note-modal-title">Edit Note <span id="unsaved-indicator" class="unsaved-indicator" style="display: none;"></span></div>
                 <button onclick="closeNoteModal()" title="Close"><i class="fas fa-times"></i></button>
             </div>
-            <div class="note-modal-content">
+            <div class="note-modal-content" id="note-modal-content-box">
                 <div class="edit-note-title" id="edit-note-title" contenteditable="true" data-placeholder="Title"></div>
                 <div class="editable" id="edit-note-content" contenteditable="true" data-placeholder="Take a note..."></div>
                 
-                <!-- Added matching toolbar for edit mode -->
-                <div class="toolbar" id="edit-toolbar">
-                    <!-- Text styling -->
-                    <div class="toolbar-group">
-                        <button onclick="formatTextEdit('bold')" title="Bold"><i class="fas fa-bold"></i></button>
-                        <button onclick="formatTextEdit('italic')" title="Italic"><i class="fas fa-italic"></i></button>
-                        <button onclick="formatTextEdit('underline')" title="Underline"><i class="fas fa-underline"></i></button>
-                        <button onclick="formatTextEdit('strikethrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
-                    </div>
-                    
-                    <!-- Lists -->
-                    <div class="toolbar-group">
-                        <button onclick="formatTextEdit('bulletList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
-                        <button onclick="formatTextEdit('numberedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                    </div>
-                    
-                    <!-- Headings dropdown -->
-                    <div class="toolbar-group">
-                        <div class="heading-dropdown">
-                            <button title="Headings"><i class="fas fa-heading"></i></button>
-                            <div class="heading-dropdown-content">
-                                <button onclick="formatTextEdit('h1')">Heading 1</button>
-                                <button onclick="formatTextEdit('h2')">Heading 2</button>
-                                <button onclick="formatTextEdit('h3')">Heading 3</button>
-                                <button onclick="formatTextEdit('p')">Normal Text</button>
-                            </div>
+                <!-- Toolbar is moved to here -->
+            </div>
+            <div class="toolbar" id="edit-toolbar">
+                <!-- Text styling -->
+                <div class="toolbar-group">
+                    <button onclick="formatTextEdit('bold')" title="Bold"><i class="fas fa-bold"></i></button>
+                    <button onclick="formatTextEdit('italic')" title="Italic"><i class="fas fa-italic"></i></button>
+                    <button onclick="formatTextEdit('underline')" title="Underline"><i class="fas fa-underline"></i></button>
+                    <button onclick="formatTextEdit('strikethrough')" title="Strikethrough"><i class="fas fa-strikethrough"></i></button>
+                </div>
+                
+                <!-- Lists -->
+                <div class="toolbar-group">
+                    <button onclick="formatTextEdit('bulletList')" title="Bullet List"><i class="fas fa-list-ul"></i></button>
+                    <button onclick="formatTextEdit('numberedList')" title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                </div>
+                
+                <!-- Headings dropdown -->
+                <div class="toolbar-group">
+                    <div class="heading-dropdown">
+                        <button title="Headings"><i class="fas fa-heading"></i></button>
+                        <div class="heading-dropdown-content">
+                            <button onclick="formatTextEdit('h1')">Heading 1</button>
+                            <button onclick="formatTextEdit('h2')">Heading 2</button>
+                            <button onclick="formatTextEdit('h3')">Heading 3</button>
+                            <button onclick="formatTextEdit('p')">Normal Text</button>
                         </div>
                     </div>
-                    
-                    <!-- Text alignment -->
-                    <div class="toolbar-group align-buttons">
-                        <button onclick="formatTextEdit('alignLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
-                        <button onclick="formatTextEdit('alignCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
-                        <button onclick="formatTextEdit('alignRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
-                    </div>
-                    
-                    <!-- Blockquote -->
-                    <div class="toolbar-group">
-                        <button onclick="formatTextEdit('blockquote')" title="Quote"><i class="fas fa-quote-right"></i></button>
-                    </div>
-                    
-                    <!-- Media/links -->
-                    <div class="toolbar-group">
-                        <button onclick="createLinkEdit()" title="Insert Link"><i class="fas fa-link"></i></button>
-                    </div>
+                </div>
+                
+                <!-- Text alignment -->
+                <div class="toolbar-group align-buttons">
+                    <button onclick="formatTextEdit('alignLeft')" title="Align Left"><i class="fas fa-align-left"></i></button>
+                    <button onclick="formatTextEdit('alignCenter')" title="Align Center"><i class="fas fa-align-center"></i></button>
+                    <button onclick="formatTextEdit('alignRight')" title="Align Right"><i class="fas fa-align-right"></i></button>
+                </div>
+                
+                <!-- Blockquote -->
+                <div class="toolbar-group">
+                    <button onclick="formatTextEdit('blockquote')" title="Quote"><i class="fas fa-quote-right"></i></button>
+                </div>
+                
+                <!-- Media/links -->
+                <div class="toolbar-group">
+                    <button onclick="createLinkEdit()" title="Insert Link"><i class="fas fa-link"></i></button>
                 </div>
             </div>
             <div class="note-modal-footer">
@@ -233,6 +234,7 @@
                 </div>
                 <div class="note-modal-actions-right">
                     <button id="save-note-btn" class="primary"><i class="fas fa-save"></i> Save</button>
+                    <div id="note-resize-handle" class="note-resize-handle"></div>
                 </div>
             </div>
         </div>
