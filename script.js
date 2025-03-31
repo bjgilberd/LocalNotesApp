@@ -3,7 +3,7 @@ const DB_NAME = 'LocalNotesDB';
 const DB_VERSION = 2; // Increase version to trigger database upgrade
 const NOTES_STORE = 'notes';
 const TAGS_STORE = 'tags';
-const APP_VERSION = '1.1.0'; // Application version - updated for GitHub integration
+const APP_VERSION = '1.1.1'; // Application version - updated for GitHub integration
 const APP_VERSION_KEY = 'appVersion'; // Key for storing version in local storage
 const VERSION_CHECK_URL = 'https://raw.githubusercontent.com/username/LocalNotesApp/main/version.json'; // Replace with your actual GitHub or hosting URL
 
