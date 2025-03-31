@@ -1996,8 +1996,21 @@ function openNoteModal(note) {
     const saveNoteBtn = document.getElementById('save-note-btn');
     const deleteNoteBtn = document.getElementById('delete-note-btn');
     const archiveNoteBtn = document.getElementById('archive-note-btn');
-    const printPdfBtn = document.getElementById('print-pdf-btn');
+    const printPdfBtn = document.getElementById('print-pdf-btn'); // Get reference
     const noteCreatedDate = document.querySelector('.note-created-date');
+
+    // --- Add Event Listener for Print Button ---
+    if (printPdfBtn) {
+        // Remove potential old listener first to be safe
+        const newPrintPdfBtn = printPdfBtn.cloneNode(true);
+        printPdfBtn.parentNode.replaceChild(newPrintPdfBtn, printPdfBtn);
+        // Add the listener to the new button
+        newPrintPdfBtn.addEventListener('click', printToPdf);
+        console.log('Added printToPdf event listener');
+    } else {
+        console.error('Print to PDF button not found!');
+    }
+    // --- End Add Event Listener ---
     
     // Set the current note ID as a data attribute on the modal
     modal.dataset.noteId = note.id;
@@ -2219,18 +2232,31 @@ function saveNote() {
             const updateTransaction = db.transaction([NOTES_STORE, TAGS_STORE], 'readwrite');
             const updateStore = updateTransaction.objectStore(NOTES_STORE);
             
-            // Update the note
+            // --- Fix: Ensure 'created' date is always preserved or set --- 
+            // Use original created date if valid, otherwise use the modified date as fallback
+            const modificationTime = Date.now(); // Store modification time
+            let creationDate = existingNote.created;
+            
+            // Validate original created date
+            if (!creationDate || isNaN(new Date(creationDate).getTime())) {
+                Logger.warn(`Invalid or missing created date for note ${existingNote.id}. Falling back to modification time.`);
+                creationDate = modificationTime; // Fallback to modification time
+            }
+            
+            // Update the note object
             const updatedNote = {
                 id: existingNote.id, // Keep the original ID type
                 title: title,
                 content: preservedContent,
-                timestamp: Date.now(), // Update timestamp
-                created: existingNote.created || Date.now(), // Preserve creation date
+                modified: modificationTime, // Use stored modification time
+                created: creationDate, // Use the determined (or fallback) creation date
                 tags: tags,
-                archived: existingNote.archived === true // Ensure archived is a boolean value (false if undefined)
+                archived: existingNote.archived === true 
             };
             
-            console.log('Saving note with type:', typeof existingNote.id, 'ID:', existingNote.id);
+            // --- Debug Log: Log the object being saved --- 
+            console.log('>>> Saving updatedNote object:', JSON.stringify(updatedNote));
+            // --- End Debug Log ---
             
             // Save to the database
             const updateRequest = updateStore.put(updatedNote);
@@ -2545,40 +2571,60 @@ function archiveNote() {
 
 // Print note to PDF - Fixed version
 function printToPdf() {
-    if (!currentNoteId) return;
+    const modal = document.getElementById('note-modal');
+    const noteId = modal ? modal.dataset.noteId : null; // Get ID from modal dataset
+
+    console.log('printToPdf called for note ID:', noteId); // Log the ID being used
+
+    if (!noteId) {
+        console.error('Could not determine note ID for printing.');
+        return;
+    }
 
     // Get title and content directly from the DOM to ensure we have the latest content
     const titleElement = document.getElementById('edit-note-title');
     const contentElement = document.getElementById('edit-note-content');
-    
+
     if (!titleElement || !contentElement) {
-        console.error('Could not find title or content elements');
+        console.error('Could not find title or content elements for printing');
         return;
     }
-    
-    const title = titleElement.innerHTML;
+
+    const title = titleElement.textContent.trim(); // Use textContent for title
     let content = contentElement.innerHTML;
-    
+
     // Clean up content for printing
     content = cleanContentForPrinting(content);
-    
-    console.log('Printing PDF with title:', title);
-    console.log('Content length:', content.length);
+
+    console.log('Attempting to open print window for:', title);
+    console.log('Cleaned content length:', content.length);
 
     // Create a new window with just the note content
-    const printWindow = window.open('', '_blank');
+    const printWindow = window.open('', '_blank', 'width=800,height=600'); // Added size suggestion
+
+    if (!printWindow) {
+        console.error('Failed to open print window. Possible popup blocker?');
+        alert('Could not open print window. Please check if your browser is blocking popups for this page.');
+        return;
+    }
+
+    console.log('Print window opened successfully.'); // Log success
+
     printWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-            <title>${title || 'Note'}</title>
+            <title>${title || 'Note'} - Print Preview</title>
             <style>
+                /* ... (keep existing styles) ... */
                 body {
                     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                     padding: 20px;
                     line-height: 1.5;
                     max-width: 800px;
                     margin: 0 auto;
+                    -webkit-print-color-adjust: exact; /* Ensure background colors print */
+                    print-color-adjust: exact;
                 }
                 h1 {
                     font-size: 1.5rem;
@@ -2589,10 +2635,15 @@ function printToPdf() {
                 img {
                     max-width: 100%;
                     height: auto;
+                    display: block; /* Prevent extra space below images */
+                    margin: 10px 0;
                 }
-                /* Preserve formatting from the editor */
                 ul, ol {
-                    margin-left: 20px;
+                    margin-left: 20px; /* Adjusted margin */
+                    padding-left: 20px; /* Add padding for bullets/numbers */
+                }
+                li {
+                    margin-bottom: 5px; /* Space between list items */
                 }
                 a {
                     color: #0066cc;
@@ -2601,58 +2652,108 @@ function printToPdf() {
                 .note-content {
                     margin-top: 20px;
                 }
-                pre, code {
-                    background-color: #f5f5f5;
+                pre { /* Added pre styling */
+                    background-color: #f0f0f0;
+                    padding: 10px;
+                    border-radius: 4px;
+                    overflow-x: auto; /* Handle long lines */
+                    white-space: pre-wrap; /* Wrap lines */
+                    word-wrap: break-word;
+                }
+                code {
+                    background-color: #f0f0f0; /* Consistent background */
                     border-radius: 3px;
                     padding: 2px 4px;
-                    font-family: monospace;
+                    font-family: 'Courier New', monospace; /* Monospace font */
+                    font-size: 0.9em;
                 }
                 blockquote {
-                    border-left: 3px solid #ccc;
-                    padding-left: 10px;
-                    color: #666;
-                    margin-left: 10px;
+                    border-left: 4px solid #ccc; /* Thicker border */
+                    padding: 10px 15px; /* More padding */
+                    color: #555; /* Darker text */
+                    margin: 15px 0; /* More margin */
+                    background-color: #f9f9f9; /* Subtle background */
                 }
+                /* Ensure content takes up space */
+                 p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre {
+                   margin-bottom: 1em; /* Standard bottom margin */
+                 }
+                 p:last-child, h1:last-child /* etc */ {
+                   margin-bottom: 0; /* No margin on last element */
+                 }
             </style>
             <script>
-                // Count all images in the document
-                function countImages() {
-                    return document.querySelectorAll('img').length;
-                }
-                
-                // Check if all images are loaded
-                function areAllImagesLoaded() {
-                    const images = document.querySelectorAll('img');
-                    return Array.from(images).every(img => img.complete);
-                }
-                
-                // Print the document when everything is ready
                 function printWhenReady() {
-                    const imageCount = countImages();
-                    console.log('Images found:', imageCount);
-                    
-                    if (imageCount === 0 || areAllImagesLoaded()) {
-                        // Either no images or all images loaded, print now
+                    console.log('Print window content loaded.');
+                    // Use requestAnimationFrame for smoother rendering before print
+                    requestAnimationFrame(() => {
+                         // A small delay can sometimes help ensure rendering completes
                         setTimeout(() => {
-                            window.print();
-                        }, 500);
-                    } else {
-                        // Wait for images to load
-                        console.log('Waiting for images to load...');
-                        setTimeout(printWhenReady, 300);
-                    }
+                            try {
+                                console.log('Executing window.print()...');
+                                window.print();
+                                console.log('window.print() executed.');
+                                // Close might happen too fast, let's delay it slightly after print
+                                setTimeout(() => { window.close(); }, 100);
+                            } catch (e) {
+                                console.error('Error during print:', e);
+                                // Optionally close even if print fails
+                                // window.close();
+                            }
+                        }, 150); // Slightly increased delay
+                    });
                 }
-                
-                // Set up events
+
+                // Use DOMContentLoaded for faster script execution
+                document.addEventListener('DOMContentLoaded', function() {
+                     console.log('Print window DOMContentLoaded.');
+                     // Check images, similar to before, but simplified
+                     const images = document.querySelectorAll('img');
+                     let loadedImages = 0;
+                     const totalImages = images.length;
+
+                     if (totalImages === 0) {
+                         printWhenReady();
+                     } else {
+                         console.log('Waiting for ' + totalImages + ' image(s) to load...');
+                         images.forEach(img => {
+                             if (img.complete) {
+                                 loadedImages++;
+                             } else {
+                                 img.onload = img.onerror = () => {
+                                     loadedImages++;
+                                     console.log('Image loaded/error (' + loadedImages + '/' + totalImages + ')');
+                                     if (loadedImages === totalImages) {
+                                         console.log('All images loaded/processed.');
+                                         printWhenReady();
+                                     }
+                                 };
+                             }
+                         });
+                         // If all images were already complete in the loop
+                         if (loadedImages === totalImages) {
+                              console.log('All images were already complete.');
+                              printWhenReady();
+                         }
+                         // Add a timeout failsafe in case onload/onerror doesn't fire
+                         setTimeout(() => {
+                             if (loadedImages < totalImages) {
+                                 console.warn('Image load timeout reached, attempting print anyway.');
+                                 printWhenReady();
+                             }
+                         }, 5000); // 5 second timeout
+                     }
+                 });
+
+                // Fallback if DOMContentLoaded doesn't cover everything
                 window.onload = function() {
-                    console.log('Document loaded, preparing to print...');
-                    printWhenReady();
+                    console.log('Print window full load event fired.');
+                    // Potentially call printWhenReady() again if needed,
+                    // but DOMContentLoaded should be sufficient usually.
                 };
-                
-                // Handle after print
-                window.onafterprint = function() {
-                    window.close();
-                };
+
+                // Removed onafterprint as it's less reliable
+                // window.onafterprint = function() { window.close(); };
             </script>
         </head>
         <body>
@@ -2661,9 +2762,9 @@ function printToPdf() {
         </body>
         </html>
     `);
-    
-    // Close the document to finish loading
+
     printWindow.document.close();
+    console.log('Print window document closed.');
 }
 
 // Helper function to clean up content for printing
